@@ -1518,7 +1518,7 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
     W.state = 'open'; W.busy = false;
     if (!W.el.contains(document.activeElement)) W.el.focus({ preventScroll: true });
     ga('open_window', { window_id: W.id });
-    if (pano) pano.checkClutter();
+    if (pano) pano.notice('window-opened');
   }
   async function closeW(W, quiet) {
     if ((W.busy && !quiet) || W.state === 'closed') return;
@@ -1541,7 +1541,7 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
     W.el.remove(); WINS.delete(W.id);
     if (W.onClose) W.onClose();
     const next = topWin(); if (next) { focusW(next); next.el.focus({ preventScroll: true }); }
-    if (pano) pano.windowClosed();
+    if (pano) pano.notice('window-closed');
   }
   async function minimizeW(W) {
     if (W.busy || W.state !== 'open') return;
@@ -2243,6 +2243,7 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
   /* =====================================================================
      THE CAT: his body and engine load from the Pano repo (/Pano/latest/pano.js).
      His words and tours load from his brain there (/Pano/latest/brain/portfolio.json).
+     His skills load from there too (/Pano/latest/skills/). Each is offered only if this page has what it needs.
      What stays here is what belongs to this page: where things are, how to read his tours, and his adapter.
      ===================================================================== */
   // ---- where things are
@@ -2272,15 +2273,13 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
     }
   };
 
-  /* ---------- Paño's adapter: what this page has for him to work with ---------- */
+  /* ---------- Paño's adapter: what this page has for him to work with ----------
+     The last four entries are what his skills need. Take one out and he stops offering that skill. */
   const pano = window.Pano ? Pano.init({
     ga,
-    brain: 'portfolio', tourHelpers,
-    desk: $('#desktop'),
-    keys: { wall: 'dev-pf-wall', cb: 'dev-pf-cb' },
+    brain: 'portfolio',
     canGreet: () => !HASH[h] && lock.hidden,
     toast, hideToast,
-    binIcon: () => document.querySelector('.dicon[data-open="folder:recycle"]'),
     closeOverlayAt: async hit => {
       if (startOpen && start.contains(hit)) { await closeStart(); return true; }
       if (calOpen && cal.contains(hit)) { await closeCal(); return true; }
@@ -2289,7 +2288,10 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
     windowOf: el => el.closest('.window'),
     paneOf: el => el.parentElement && el.parentElement.closest('.pagewrap, .files, .rlist, .skbody, .win-inner'),
     scrollInPane,
-    windows: { WINS, topWin, focusW, keepOnScreen, rectDelta, closeW, minimizeW }
+    tours: tourHelpers,
+    background: { desk: $('#desktop'), walls: ['mountain', 'green', 'black'], modes: ['protan', 'deutan', 'tritan', 'mono'], keys: { wall: 'dev-pf-wall', cb: 'dev-pf-cb' } },
+    windows: { WINS, topWin, focusW, keepOnScreen, rectDelta, closeW, minimizeW },
+    bin: { icon: () => document.querySelector('.dicon[data-open="folder:recycle"]') }
   }) : null;
 })();
 </script>
