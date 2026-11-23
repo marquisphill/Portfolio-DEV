@@ -2242,7 +2242,8 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
 
   /* =====================================================================
      THE CAT: his body and engine load from the Pano repo (/Pano/latest/pano.js).
-     What stays here is what belongs to this page: where things are, his tours, and his adapter.
+     His words and tours load from his brain there (/Pano/latest/brain/portfolio.json).
+     What stays here is what belongs to this page: where things are, how to read his tours, and his adapter.
      ===================================================================== */
   // ---- where things are
   const iconFor_ = k => $(`.dicon[data-open="${k}"]`);
@@ -2250,54 +2251,31 @@ html[data-cb="mono"]{filter:grayscale(1) contrast(1.2)}
   const explorerAt = k => winOpen('explorer') && WINS.get('explorer').st.key === k;
   const fileNamed = n => $$('#layer .window .file').find(f => f.textContent.trim() === n);
   const topPage = () => { const W = topWin(); return W && W.id.startsWith('doc:') ? $('.pagewrap', W.el) : null; };
-  const skillsModalOpen = () => { const m = $('#layer .skmodal'); return m && !m.hidden; };
 
-  // ---- the tours
-  const TOURS = {
-    resume: [
-      { say: 'His résumé is right here on the desktop. Click <b>Résumé.pdf</b>.',
-        target: () => iconFor_('app:resume'), done: () => winOpen('resume'), act: el => openTarget('app:resume', el) },
-      { say: 'Five versions, each built for a different role. <b>Preview</b> opens one, <b>Download</b> saves it.',
-        target: () => $('#layer .rlist'), next: 'Got it' }
-    ],
-    history: [
-      { say: 'Ten years of history are filed in <b>Experience</b>. Click the folder.',
-        target: () => iconFor_('folder:experience'), done: () => explorerAt('experience'), act: el => openTarget('folder:experience', el) },
-      { say: 'Newest first. This is where he is now. Double-click a file, or select it and press <b>Open</b>.',
-        target: () => explorerAt('experience') && fileNamed('MarineMax – YachtIQ'),
-        done: () => ['marinemax', 'city', 'flexpm', 'flexbsa', 'pet'].some(k => winOpen('doc:' + k)), act: el => openTarget('doc:marinemax', el) },
-      { say: 'Scroll to read. The buttons at the bottom lead to the next chapter. <span class="ktid">Red words</span> are the key things he does.',
-        target: topPage, next: 'Got it' }
-    ],
-    projects: [
-      { say: 'The case studies live in <b>Projects</b>. Click the folder.',
-        target: () => iconFor_('folder:projects'), done: () => explorerAt('projects'), act: el => openTarget('folder:projects', el) },
-      { say: 'Start with this one: 1,000+ legacy reports cut to about 20. Double-click to open it.',
-        target: () => explorerAt('projects') && fileNamed('1,000+ reports → ~20'), done: () => winOpen('doc:reports'), act: el => openTarget('doc:reports', el) },
-      { say: 'The diagram shows how it worked. Click any step to jump to that part of the story, and the buttons at the end lead to the next case.',
-        target: topPage, next: 'Got it' }
-    ],
-    skills: [
-      { say: 'Open <b>Skills</b> to see what he can do.',
-        target: () => iconFor_('app:skills'), done: () => winOpen('skills'), act: el => openTarget('app:skills', el) },
-      { say: 'Six areas, and that’s me in every picture. Pick a card to open it.',
-        target: () => winOpen('skills') && $('#layer .skgrid'), done: skillsModalOpen, act: () => WINS.get('skills').showSkill(0) },
-      { say: '<span class="ktid">Red tags</span> are the key things he does. Use <b>Next</b> to flip through the six areas.',
-        target: () => skillsModalOpen() && $('#layer .skfoot [data-step="1"]'), next: 'Got it' }
-    ],
-    contact: [
-      { say: 'Want to reach Phill? Click <b>Contact</b>.',
-        target: () => iconFor_('app:contact'), done: () => winOpen('contact'), act: el => openTarget('app:contact', el) },
-      { say: 'Email is the fastest way. This button starts one.',
-        target: () => $('#layer .contact .wbtn.default'), next: 'Got it' }
-    ]
+  // ---- how to read his tours. The tours themselves (his words, what he points at, what counts as
+  //      done) are in his brain: /Pano/latest/brain/portfolio.json. These are the parts only this page knows.
+  const tourHelpers = {
+    target: {
+      icon: k => iconFor_(k),
+      file: (name, d) => explorerAt(d.in) && fileNamed(name),
+      top_page: () => topPage(),
+      window_el: id => winOpen(id) && WINS.get(id).el
+    },
+    done: {
+      window: id => winOpen(id),
+      any_window: ids => ids.some(winOpen),
+      explorer: k => explorerAt(k)
+    },
+    act: {
+      open: (k, el) => openTarget(k, el),
+      skill_card: i => WINS.get('skills').showSkill(i)
+    }
   };
-  const GOALS = [['View his résumé', 'resume'], ['Read his history', 'history'], ['See what he built', 'projects'], ['Explore his skills', 'skills'], ['Get in touch', 'contact']];
 
   /* ---------- Paño's adapter: what this page has for him to work with ---------- */
   const pano = window.Pano ? Pano.init({
     ga,
-    tours: TOURS, goals: GOALS,
+    brain: 'portfolio', tourHelpers,
     desk: $('#desktop'),
     keys: { wall: 'dev-pf-wall', cb: 'dev-pf-cb' },
     canGreet: () => !HASH[h] && lock.hidden,
